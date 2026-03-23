@@ -1,0 +1,81 @@
+create view vw_infogeneral as
+SELECT 
+    PRODUCT_CATEGORY,
+    PRODUCT_NAME,
+    SUM(QUANTITY) AS UNIDADES,
+    SUM(TOTAL_SALES) AS VENTAS,
+    SUM(PROFIT) AS BENEFICIO
+FROM [ECOMMERCE_LIMPIO].[dbo].[ecomerce]
+GROUP BY 
+    PRODUCT_CATEGORY,
+    PRODUCT_NAME
+
+go
+-- ranking por categoria--
+create view vw_ranking_categoria as
+WITH RANKING AS (
+    SELECT
+        PRODUCT_NAME,
+        PRODUCT_CATEGORY,
+        SUM(TOTAL_SALES) AS VENTAS,
+        ROW_NUMBER () OVER(
+                 PARTITION BY PRODUCT_CATEGORY 
+                 ORDER BY sum(total_sales) DESC )
+                 AS RANKING
+    FROM [ECOMMERCE_LIMPIO].[dbo].[ecomerce]
+    GROUP BY
+        PRODUCT_NAME,
+        PRODUCT_CATEGORY)
+SELECT *
+ from RANKING
+ where RANKING <=5;
+ go
+-- rentabilidad--
+create view vw_rentabilidad as
+SELECT
+    PRODUCT_NAME,
+    product_category,
+    SUM(TOTAL_SALES) AS VENTAS,
+    SUM(PROFIT) AS BENEFICIO,
+    ROUND(SUM(PROFIT) * 1.0 / SUM(TOTAL_SALES), 2) AS MARGEN
+FROM ecomerce
+GROUP BY PRODUCT_NAME,Product_Category;
+go;
+--productos problemas--
+create view vw_producto_problema as
+select
+    product_name,
+    sum(Total_Sales) as ventas,
+    sum(profit) as beneficio
+FROM [ECOMMERCE_LIMPIO].[dbo].[ecomerce]
+group by
+    Product_Name
+having
+    sum(profit)<0
+go;
+-- precio vs cantidad--
+create view vw_precio_vs_cantidad as
+select
+    product_name,
+    avg(unit_price) as promedio_precio,
+    sum(quantity) as unidades
+FROM [ECOMMERCE_LIMPIO].[dbo].[ecomerce]
+group by product_name;
+go
+--tipo negocio--
+create view vw_tipo_negocio as
+select
+    product_name,
+    sum(total_sales) as ventas,
+    sum(profit) as beneficio,
+    case
+        when sum(profit)< 0 then 'perdidas'
+        when sum(profit)>150000 then 'estrella'
+        else 'normal' 
+        end as clasificacion
+FROM [ECOMMERCE_LIMPIO].[dbo].[ecomerce]
+group by product_name
+;
+go
+
+        
