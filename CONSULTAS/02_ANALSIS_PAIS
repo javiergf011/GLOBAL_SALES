@@ -1,0 +1,36 @@
+--region--
+create view vw_region as
+SELECT 
+	region,
+	sum(total_sales) as ventas,
+	sum(profit) as beneficio
+FROM [ECOMMERCE_LIMPIO].[dbo].[ecomerce]
+group by region
+;
+go
+--top 10 paises--
+create view vw_top10_pais as
+Select top 10
+	country,
+	sum(total_sales) as ventas,
+	sum(profit) as beneficio
+FROM [ECOMMERCE_LIMPIO].[dbo].[ecomerce]
+group by Country
+;
+go
+--productos mas vendidos--
+create view vw_product_mas_vendidos as
+select top 10
+	country,
+	product_name,
+	sum(quantity) as unidades,
+	sum(total_sales) as ventas,
+	sum(profit) as beneficio,
+	round(sum(profit)/NULLif(sum(total_sales),0)*100,2)  as margen,
+	rank() over(
+		partition by country
+		ORDER BY SUM(TOTAL_SALES) DESC) AS RANKING_PAIS
+FROM [ECOMMERCE_LIMPIO].[dbo].[ecomerce]
+group by country, product_name
+;
+go
